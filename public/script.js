@@ -1,15 +1,19 @@
 var scene = new THREE.Scene();
-scene.background = new THREE.Color( 0xFFFFBF );
+scene.background = new THREE.Color( 0xa0a0a0 );
+scene.fog = new THREE.Fog( 0xa0a0a0, 10, 50 );
 
-var camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 1000);
+var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
 
 //#region CAMERA SETTINGS
-camera.position.set(15,130,150);
-camera.lookAt(-0.16,-0.02,-0.003);
+camera.position.set( 1, 2, - 3 );
+camera.lookAt( 0, 5, 0 );
 //#endregion
 
 var renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio( window.devicePixelRatio );
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
 window.addEventListener('resize', () => {
@@ -23,8 +27,9 @@ const clock = new THREE.Clock();
 
 let mixer, skeleton;
 let idle, walk, run;
+let tpose, perriar;
 let stats, settings;
-let model, actions;
+let model,actions;
 
 let singleStepMode = false;
 
@@ -35,56 +40,46 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.25;
 controls.enableZoom = true;
 
-var keyLight = new THREE.DirectionalLight(new THREE.Color('hsl(30, 100%, 75%)'), 1.0);
-keyLight.position.set(-100, 0, 100);
+const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
+hemiLight.position.set( 0, 20, 0 );
 
-var fillLight = new THREE.DirectionalLight(new THREE.Color('hsl(240, 100%, 75%)'), 0.75);
-fillLight.position.set(100, 0, 100);
+const dirLight = new THREE.DirectionalLight( 0xffffff );
+dirLight.position.set( - 3, 10, - 10 );
+dirLight.castShadow = true;
+dirLight.shadow.camera.top = 2;
+dirLight.shadow.camera.bottom = - 2;
+dirLight.shadow.camera.left = - 2;
+dirLight.shadow.camera.right = 2;
+dirLight.shadow.camera.near = 0.1;
+dirLight.shadow.camera.far = 40;
 
-var backLight = new THREE.DirectionalLight(0xffffff, 1.0);
-backLight.position.set(100, 0, -100).normalize();
+scene.add(dirLight);
+scene.add(hemiLight);
 
-/*
-const mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry( 1000, 1000 ), new THREE.MeshPhongMaterial( { color: 0x3b83bd, depthWrite: true } ) );
+const mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry( 100, 100 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: false } ) );
 mesh.rotation.x = - Math.PI / 2;
 mesh.receiveShadow = true;
-*/
+scene.add( mesh );
 
-//scene.add( mesh );
+const loader = new THREE.GLTFLoader();
+loader.setPath('assets/objs/testing/');
+loader.load('Character.glb', (object) => {
 
-scene.add(keyLight);
-scene.add(fillLight);
-scene.add(backLight);
-
-const loader = new THREE.FBXLoader();
-loader.load('assets/objs/testing/Rumba_Dancing.fbx', function (object) {
+    model = object.scene;
+    scene.add(model);
     
-    model = object;
-    mixer = new THREE.AnimationMixer(model);
-
-    idle = mixer.clipAction(model.animations[0]);
-    //walk = mixer.clipAction(object.animations[1]);
-    //run = mixer.clipAction(object.animations[2]);
-
-    //actions = [idle,walk,run];
-
-    idle.play();
     model.traverse(function (child) {
         if (child.isMesh) {
             child.castShadow = true;
-            child.receiveShadow = true;
+            //child.receiveShadow = true;
         }
     });
 
     //posicion:
-    model.position.set(0,-75,0);
-
+    //model.position.set(0,-1,0);
     //Panel:
 
     createPanel();
-
-    const animations = object.animations;
-    console.log(animations);
 
     //#region Esqueleto:
     skeleton = new THREE.SkeletonHelper(model);
@@ -92,7 +87,20 @@ loader.load('assets/objs/testing/Rumba_Dancing.fbx', function (object) {
     scene.add(skeleton);
     //#endregion
 
-    scene.add(model);
+    mixer = new THREE.AnimationMixer(model);
+
+    const animations = object.animations;
+    console.log(animations);
+    idle = mixer.clipAction(animations[2]);
+    walk = mixer.clipAction(animations[1]);
+    run = mixer.clipAction(animations[3]);
+    perriar = mixer.clipAction(animations[0]);
+    tpose = mixer.clipAction(animations[4]);
+
+    actions = [idle,walk,run,perriar,tpose];
+
+    activateAllActions();
+
 });
 
 //FPS:
@@ -115,10 +123,10 @@ animate();
 function createPanel(){
     const panel = new dat.GUI({width: 300});
 
-    console.log(panel);
     const folder1 = panel.addFolder("Visión");
     const folder2 = panel.addFolder("Animaciones");
-
+    const folder3 = panel.addFolder("Velocidad");
+    
     settings = {
         'Mostrar modelo': true,
         'Mostrar esqueleto': false,
@@ -130,11 +138,12 @@ function createPanel(){
             prepareCrossFade(idle, walk, 0.5);
         },
         'De caminar a correr': function(){
-            prepareCrossFade(walk, run, 2.5);
+            prepareCrossFade(walk, run, 5.0);
         },
         'De correr a caminar': function(){
-            prepareCrossFade(run, idle, 5.0);
-        }
+            prepareCrossFade(run, walk, 5.0);
+        },
+        'Modificar velocidad de animacion': 1.0
     }
 
     folder1.add(settings, 'Mostrar modelo').onChange((visibility) => {
@@ -147,6 +156,15 @@ function createPanel(){
     crossFadeControls.push(folder2.add(settings, 'De parado a caminar'));
     crossFadeControls.push(folder2.add(settings, 'De caminar a correr'));
     crossFadeControls.push(folder2.add(settings, 'De correr a caminar'));
+    folder3.add( settings, 'Modificar velocidad de animacion', 0.0, 1.5, 0.01 ).onChange( modifyTimeScale );
+
+    folder1.open();
+    folder2.open();
+    folder3.open();
+}
+
+function modifyTimeScale(speed){
+    mixer.timeScale = speed;
 }
 
 function pauseContinue(){
@@ -183,7 +201,7 @@ function prepareCrossFade( startAction, endAction, defaultDuration ) {
     singleStepMode = false;
     unPauseAllActions();
 
-    if ( startAction === idleAction ) {
+    if ( startAction === idle ) {
         executeCrossFade( startAction, endAction, duration );
     } else {
         synchronizeCrossFade( startAction, endAction, duration );
@@ -209,4 +227,28 @@ function synchronizeCrossFade( startAction, endAction, duration ) {
             executeCrossFade( startAction, endAction, duration );
         }
     }
+}
+
+function setWeight( action, weight ) {
+
+    action.enabled = true;
+    action.setEffectiveTimeScale( 1 );
+    action.setEffectiveWeight( weight );
+
+}
+
+function activateAllActions() {
+
+    setWeight( idle, 1.0 );
+    setWeight( walk, 0.0 );
+    setWeight( run, 0.0 );
+    setWeight( perriar, 0.0 );
+    setWeight( tpose, 0.0 );
+
+    actions.forEach( function ( action ) {
+
+        action.play();
+
+    } );
+
 }
