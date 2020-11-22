@@ -5,8 +5,8 @@ scene.fog = new THREE.Fog( 0xa0a0a0, 10, 50 );
 var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
 
 //#region CAMERA SETTINGS
-camera.position.set( 1, 2, - 3 );
-camera.lookAt( 0, 5, 0 );
+camera.position.set( 2.25, 1.3, 3 );
+camera.lookAt( 0, 1, 0 );
 //#endregion
 
 var renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -39,6 +39,7 @@ var controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.25;
 controls.enableZoom = true;
+controls.target.set(0.2,0.6,-0.1);
 
 const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
 hemiLight.position.set( 0, 20, 0 );
