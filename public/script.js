@@ -21,7 +21,7 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
 
     renderer.setSize( window.innerWidth, window.innerHeight );
-})
+});
 
 const clock = new THREE.Clock();
 
@@ -29,7 +29,7 @@ let mixer, skeleton;
 let idle, walk, run;
 let tpose, perriar;
 let stats, settings;
-let model,actions;
+let model,actions,raycaster;
 
 let singleStepMode = false;
 
@@ -104,9 +104,14 @@ loader.load('Character.glb', (object) => {
 
 });
 
+raycaster = new THREE.Raycaster();
+
 //FPS:
 stats = new Stats();
 document.body.appendChild(stats.dom);
+document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+document.addEventListener('click', e => raycast(e));
+document.addEventListener('touchend', e => raycast(e, true));
 
 var animate = function () {
     requestAnimationFrame(animate);
@@ -240,10 +245,10 @@ function setWeight( action, weight ) {
 
 function activateAllActions() {
 
-    setWeight( idle, 1.0 );
+    setWeight( idle, 0.0 );
     setWeight( walk, 0.0 );
     setWeight( run, 0.0 );
-    setWeight( perriar, 0.0 );
+    setWeight( perriar, 1.0 );
     setWeight( tpose, 0.0 );
 
     actions.forEach( function ( action ) {
@@ -253,3 +258,48 @@ function activateAllActions() {
     } );
 
 }
+
+function onDocumentMouseMove( event ) {
+    var mouse = {};
+    mouse.x = 2 * (event.clientX / window.innerWidth) - 1;
+    mouse.y = 1 - 2 * (event.clientY / window.innerHeight);
+    // update the picking ray with the camera and mouse position
+    raycaster.setFromCamera(mouse, camera);
+    
+    // calculate objects intersecting the picking ray
+    var intersects = raycaster.intersectObjects(scene.children, true);
+    if (intersects[0]) {
+      var object = intersects[0].object;
+  
+      if (object.name === 'stacy') {
+        object.material.color.set( 0xffffff);
+      }
+    }
+}
+
+function raycast(e, touch = false) {
+    var mouse = {};
+    if (touch) {
+      mouse.x = 2 * (e.changedTouches[0].clientX / window.innerWidth) - 1;
+      mouse.y = 1 - 2 * (e.changedTouches[0].clientY / window.innerHeight);
+    } else {
+      mouse.x = 2 * (e.clientX / window.innerWidth) - 1;
+      mouse.y = 1 - 2 * (e.clientY / window.innerHeight);
+    }
+    mouse.x = 2 * (e.clientX / window.innerWidth) - 1;
+    mouse.y = 1 - 2 * (e.clientY / window.innerHeight);
+    // update the picking ray with the camera and mouse position
+    raycaster.setFromCamera(mouse, camera);
+    
+    // calculate objects intersecting the picking ray
+    var intersects = raycaster.intersectObjects(scene.children, true);
+    if (intersects[0]) {
+        
+      var object = intersects[0].object;
+      console.log(object);
+      if (object.name === 'stacy') {
+  
+        object.material.color.set( 0xffffff * Math.random() );
+      }
+    }
+  }
