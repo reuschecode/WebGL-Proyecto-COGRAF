@@ -63,8 +63,8 @@ mesh.receiveShadow = true;
 scene.add( mesh );
 
 const loader = new THREE.GLTFLoader();
-loader.setPath('assets/objs/testing/');
-loader.load('Character.glb', (object) => {
+//loader.setPath('assets/objs/testing/');
+loader.load('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1376484/stacy_lightweight.glb', (object) => {
 
     model = object.scene;
     scene.add(model);
@@ -85,7 +85,7 @@ loader.load('Character.glb', (object) => {
     //#region Esqueleto:
     skeleton = new THREE.SkeletonHelper(model);
     skeleton.visible = false;
-    scene.add(skeleton);
+    //scene.add(skeleton);
     //#endregion
 
     mixer = new THREE.AnimationMixer(model);
@@ -109,7 +109,7 @@ raycaster = new THREE.Raycaster();
 //FPS:
 stats = new Stats();
 document.body.appendChild(stats.dom);
-document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+//document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 document.addEventListener('click', e => raycast(e));
 document.addEventListener('touchend', e => raycast(e, true));
 
