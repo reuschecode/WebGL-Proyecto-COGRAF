@@ -338,7 +338,7 @@ function raycast(e, touch = false) {
             case '1':
                 for(let i = 0; i < esqueleto["Esqueleto"].length; i++){
                     if(esqueleto["Esqueleto"][i].Id === object.name){
-                        escribir(esqueleto["Esqueleto"][i].Info,esqueleto["Esqueleto"][i].Info.length);
+                        escribir(esqueleto["Esqueleto"][i].Nombre,esqueleto["Esqueleto"][i].Info,esqueleto["Esqueleto"][i].Nombre.length,esqueleto["Esqueleto"][i].Info.length);
                         imagen(esqueleto["Esqueleto"][i].Img);
                         break;
                     }
@@ -362,6 +362,9 @@ function raycast(e, touch = false) {
                     }
                 }
                 break;
+            default:
+                console.log("ERROR");
+                break;
         }
       }
     }
@@ -369,17 +372,28 @@ function raycast(e, touch = false) {
 
 
     
-async function escribir(txt,num){
+async function escribir(titulo,info,num1,num2){
     let wait = 20;
-    console.log("hola " + txt);
+    if(info && titulo){
+        console.log("hola " + info);
+    let h2 = document.createElement('h2');
     let h1 = document.createElement('h1');
     document.getElementById('info').innerHTML = "";
     document.getElementById('info').appendChild(h1);
-    for(i = 0; i < num; i++) {
-       h1.innerHTML += txt.charAt(i);
+    document.getElementById('info').appendChild(h2);
+    for(i = 0; i < num1; i++) {
+        h1.innerHTML += titulo.charAt(i);
+         await sleep(wait*2);
+     }
+    for(i = 0; i < num2; i++) {
+       h2.innerHTML += info.charAt(i);
         await sleep(wait);
     }
     flag = false;
+    }
+    else{
+        console.log("Error");
+    }
 }
 
 function imagen(src){
