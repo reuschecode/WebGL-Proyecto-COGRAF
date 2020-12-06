@@ -22,6 +22,25 @@ window.addEventListener('resize', () => {
 
     renderer.setSize( window.innerWidth, window.innerHeight );
 });
+//musica
+var audio = new THREE.AudioListener();
+
+var sound = new THREE.Audio(audio);
+var loaderSound = new THREE.AudioLoader().load('assets/bailan-rochas-y-chetas.mp3',(audio) => {
+    sound.setBuffer(audio);
+    sound.play();
+});
+
+window.addEventListener('keydown',(evt)=> {
+    if(evt.key == "q"){
+        if(sound.isPlaying){
+            sound.pause();
+        }else{
+            sound.play();
+        }
+    }
+})
+//musica
 
 const clock = new THREE.Clock();
 
