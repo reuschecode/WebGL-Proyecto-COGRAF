@@ -1,11 +1,11 @@
 var scene = new THREE.Scene();
-scene.background = new THREE.Color( 0xa0a0a0 );
+scene.background = new THREE.Color( 0x00000 );
 scene.fog = new THREE.Fog( 0xa0a0a0, 10, 50 );
 
 var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
 
 //#region CAMERA SETTINGS
-camera.position.set( 2.25, 1.3, 3 );
+camera.position.set( 0, 1.3, 3 );
 camera.lookAt( 0, 1, 0 );
 //#endregion
 
@@ -39,7 +39,7 @@ var controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.25;
 controls.enableZoom = true;
-controls.target.set(0.2,0.6,-0.1);
+controls.target.set(-0.4,0.8,-0.1);
 
 const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
 hemiLight.position.set( 0, 20, 0 );
@@ -54,21 +54,27 @@ dirLight.shadow.camera.right = 2;
 dirLight.shadow.camera.near = 0.1;
 dirLight.shadow.camera.far = 40;
 
+let XD = true;
+
 scene.add(dirLight);
 scene.add(hemiLight);
 
 const mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry( 100, 100 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: false } ) );
 mesh.rotation.x = - Math.PI / 2;
 mesh.receiveShadow = true;
-scene.add( mesh );
+//scene.add( mesh );
+
+const model_click = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/1376484/stacy_lightweight.glb';
 
 const loader = new THREE.GLTFLoader();
-//loader.setPath('assets/objs/testing/');
-loader.load('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1376484/stacy_lightweight.glb', (object) => {
+loader.setPath('assets/objs/testing/');
+loader.load('sekeleton.1.glb', (object) => {
 
     model = object.scene;
+    model.scale.setScalar(0.025)
     scene.add(model);
     
+
     model.traverse(function (child) {
         if (child.isMesh) {
             child.castShadow = true;
@@ -118,7 +124,6 @@ var animate = function () {
     controls.update();
     const delta = clock.getDelta();
     if ( mixer ) mixer.update( delta );
-    
     //FPS:
     stats.update();
 
@@ -149,7 +154,8 @@ function createPanel(){
         'De correr a caminar': function(){
             prepareCrossFade(run, walk, 5.0);
         },
-        'Modificar velocidad de animacion': 1.0
+        'Modificar velocidad de animacion': 1.0,
+        'XD':true
     }
 
     folder1.add(settings, 'Mostrar modelo').onChange((visibility) => {
@@ -163,6 +169,9 @@ function createPanel(){
     crossFadeControls.push(folder2.add(settings, 'De caminar a correr'));
     crossFadeControls.push(folder2.add(settings, 'De correr a caminar'));
     folder3.add( settings, 'Modificar velocidad de animacion', 0.0, 1.5, 0.01 ).onChange( modifyTimeScale );
+    folder3.add(settings, 'XD').onChange(()=> {
+        XD = !XD;
+    })
 
     folder1.open();
     folder2.open();
@@ -245,10 +254,10 @@ function setWeight( action, weight ) {
 
 function activateAllActions() {
 
-    setWeight( idle, 0.0 );
+    setWeight( idle, 1.0 );
     setWeight( walk, 0.0 );
     setWeight( run, 0.0 );
-    setWeight( perriar, 1.0 );
+    setWeight( perriar, 0.0 );
     setWeight( tpose, 0.0 );
 
     actions.forEach( function ( action ) {
@@ -277,6 +286,8 @@ function onDocumentMouseMove( event ) {
     }
 }
 
+let flag = false;
+
 function raycast(e, touch = false) {
     var mouse = {};
     if (touch) {
@@ -286,20 +297,71 @@ function raycast(e, touch = false) {
       mouse.x = 2 * (e.clientX / window.innerWidth) - 1;
       mouse.y = 1 - 2 * (e.clientY / window.innerHeight);
     }
-    mouse.x = 2 * (e.clientX / window.innerWidth) - 1;
-    mouse.y = 1 - 2 * (e.clientY / window.innerHeight);
     // update the picking ray with the camera and mouse position
     raycaster.setFromCamera(mouse, camera);
     
     // calculate objects intersecting the picking ray
     var intersects = raycaster.intersectObjects(scene.children, true);
     if (intersects[0]) {
-        
+    
       var object = intersects[0].object;
-      console.log(object);
-      if (object.name === 'stacy') {
-  
-        object.material.color.set( 0xffffff * Math.random() );
+      //let model1 = object.name.charAt(0)
+      let model1 = '1'; 
+      console.log(model1);
+      //object.visible = false;
+      if(!flag){
+        flag = true;
+        switch(model1){
+            case '1':
+                for(let i = 0; i < esqueleto["Esqueleto"].length; i++){
+                    console.log(esqueleto["Esqueleto"][i].Id);
+                    if(esqueleto["Esqueleto"][i].Id === object.name){
+                        escribir(esqueleto["Esqueleto"][i].Info,esqueleto["Esqueleto"][i].Info.length);
+                        imagen(esqueleto["Esqueleto"][i].Img);
+                        break;
+                    }
+                }
+                break;
+            case '2':
+                for(let i = 0; i < esqueleto["Organos"].length; i++){
+                    if(esqueleto["Organos"][i].Id === object.name){
+                        escribir(esqueleto["Organos"][i].Info,esqueleto["Organos"][i].Info.length);
+                        imagen(esqueleto["Organos"][i].Img);
+                        break;
+                    }
+                }
+                break;
+            case '3':
+                for(let i = 0; i < esqueleto["Cuerpo"].length; i++){
+                    if(esqueleto["Cuerpo"][i].Id === object.name){
+                        escribir(esqueleto["Cuerpo"][i].Info,esqueleto["Cuerpo"][i].Info.length);
+                        imagen(esqueleto["Cuerpo"][i].Img);
+                        break;
+                    }
+                }
+                break;
+        }
+       
       }
     }
-  }
+}
+    
+async function escribir(txt,num){
+    let speed = 50;
+    let h1 = document.createElement('h1');
+    document.getElementById('info').innerHTML = "";
+    document.getElementById('info').appendChild(h1);
+    for(i = 0; i < num; i++) {
+       h1.innerHTML += txt.charAt(i);
+        await sleep(speed);
+    }
+    flag = false;
+}
+
+function imagen(src){
+    document.getElementById('info-img').src = src;
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
