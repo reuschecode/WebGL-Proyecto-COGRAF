@@ -54,8 +54,6 @@ dirLight.shadow.camera.right = 2;
 dirLight.shadow.camera.near = 0.1;
 dirLight.shadow.camera.far = 40;
 
-let XD = true;
-
 scene.add(dirLight);
 scene.add(hemiLight);
 
@@ -83,7 +81,7 @@ loader.load('sekeleton.1.glb', (object) => {
     });
 
     //posicion:
-    //model.position.set(0,-1,0);
+    model.position.set(-0.25,0,0);
     //Panel:
 
     createPanel();
@@ -109,6 +107,36 @@ loader.load('sekeleton.1.glb', (object) => {
     activateAllActions();
 
 });
+
+/////////////////////////////////////////////////////////////////////////////////////
+/*
+loader.load('organos.glb', (object) => {
+
+    //model = object.scene;
+    object.scene.scale.setScalar(0.025)
+    scene.add(object.scene);
+    
+
+    object.scene.traverse(function (child) {
+        if (child.isMesh) {
+            child.castShadow = true;
+            //child.receiveShadow = true;
+        }
+    });
+
+    //posicion:
+    object.scene.position.set(-0.25,0,0);
+    //Panel:
+
+    createPanel();
+
+    //#region Esqueleto:
+    //scene.add(skeleton);
+    //#endregion
+
+});
+*/
+//////////////////////////////////////////////////////////////////////////////////////
 
 raycaster = new THREE.Raycaster();
 
@@ -154,8 +182,7 @@ function createPanel(){
         'De correr a caminar': function(){
             prepareCrossFade(run, walk, 5.0);
         },
-        'Modificar velocidad de animacion': 1.0,
-        'XD':true
+        'Modificar velocidad de animacion': 1.0
     }
 
     folder1.add(settings, 'Mostrar modelo').onChange((visibility) => {
@@ -169,9 +196,6 @@ function createPanel(){
     crossFadeControls.push(folder2.add(settings, 'De caminar a correr'));
     crossFadeControls.push(folder2.add(settings, 'De correr a caminar'));
     folder3.add( settings, 'Modificar velocidad de animacion', 0.0, 1.5, 0.01 ).onChange( modifyTimeScale );
-    folder3.add(settings, 'XD').onChange(()=> {
-        XD = !XD;
-    })
 
     folder1.open();
     folder2.open();
@@ -305,16 +329,14 @@ function raycast(e, touch = false) {
     if (intersects[0]) {
     
       var object = intersects[0].object;
-      //let model1 = object.name.charAt(0)
-      let model1 = '1'; 
-      console.log(model1);
+      let model1 = object.name.charAt(0);
+      console.log(object);
       //object.visible = false;
       if(!flag){
         flag = true;
         switch(model1){
             case '1':
                 for(let i = 0; i < esqueleto["Esqueleto"].length; i++){
-                    console.log(esqueleto["Esqueleto"][i].Id);
                     if(esqueleto["Esqueleto"][i].Id === object.name){
                         escribir(esqueleto["Esqueleto"][i].Info,esqueleto["Esqueleto"][i].Info.length);
                         imagen(esqueleto["Esqueleto"][i].Img);
@@ -341,19 +363,21 @@ function raycast(e, touch = false) {
                 }
                 break;
         }
-       
       }
     }
 }
+
+
     
 async function escribir(txt,num){
-    let speed = 50;
+    let wait = 20;
+    console.log("hola " + txt);
     let h1 = document.createElement('h1');
     document.getElementById('info').innerHTML = "";
     document.getElementById('info').appendChild(h1);
     for(i = 0; i < num; i++) {
        h1.innerHTML += txt.charAt(i);
-        await sleep(speed);
+        await sleep(wait);
     }
     flag = false;
 }
@@ -364,4 +388,11 @@ function imagen(src){
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function a(){
+    let x = model.children.length;
+    for(let i = 0; i < x; i++){
+        console.log(model.children[i].name);
+    }
 }
