@@ -1,6 +1,6 @@
 var scene = new THREE.Scene();
-scene.background = new THREE.Color( 0x00000 );
-scene.fog = new THREE.Fog( 0xa0a0a0, 10, 50 );
+scene.background = new THREE.Color( 0x72645b );
+scene.fog = new THREE.Fog(0x72645b, 2, 15);
 
 var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
 
@@ -8,6 +8,9 @@ var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHe
 camera.position.set( 0, 1.3, 3 );
 camera.lookAt( 0, 1, 0 );
 //#endregion
+
+let flagCorazon = true;
+let flagPulmon = true;
 
 var renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -26,11 +29,24 @@ window.addEventListener('resize', () => {
 var audio = new THREE.AudioListener();
 
 var sound = new THREE.Audio(audio);
-var loaderSound = new THREE.AudioLoader().load('assets/bailan-rochas-y-chetas.mp3',(audio) => {
+var corazonSound = new THREE.Audio(audio);
+var respiracionSound = new THREE.Audio(audio);
+
+var loaderSound = new THREE.AudioLoader();
+loaderSound.load('assets/navidad.mp3',(audio) => {
     sound.setBuffer(audio);
-    sound.setVolume(0.25);
+    sound.setVolume(0.025);
     sound.play();
 });
+loaderSound.load('assets/latido.mp3',(audio) => {
+    corazonSound.setBuffer(audio);
+    corazonSound.play();
+})
+loaderSound.load('assets/respiracion.mp3',(audio) => {
+    respiracionSound.setBuffer(audio);
+    respiracionSound.setVolume(0.25);
+    respiracionSound.play();
+})
 
 window.addEventListener('keydown',(evt)=> {
     if(evt.key == "q"){
@@ -51,6 +67,7 @@ let tpose, perriar;
 let stats, settings;
 let actions,raycaster;
 let esqueletoModel, organosModel, pielModel;
+let pulmonDer, pulmonIzq, corazon;
 
 let singleStepMode = false;
 
@@ -58,54 +75,45 @@ const crossFadeControls = [];
 
 var controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.25;
+controls.dampingFactor = 0.2;
 controls.enableZoom = true;
 controls.target.set(-0.4,0.8,-0.1); 
 
-const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
-hemiLight.position.set( 0, 20, 0 );
+scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
+				
+addShadowedLight( 0.5, 1, - 1, 0xffaa00, 1 );
+addShadowedLight( -3, 10, 10, 0xffffff, 1.35 );
 
-const dirLight = new THREE.DirectionalLight( 0xffffff );
-dirLight.position.set( - 3, 10, - 10 );
-dirLight.castShadow = true;
-dirLight.shadow.camera.top = 2;
-dirLight.shadow.camera.bottom = - 2;
-dirLight.shadow.camera.left = - 2;
-dirLight.shadow.camera.right = 2;
-dirLight.shadow.camera.near = 0.1;
-dirLight.shadow.camera.far = 40;
+function addShadowedLight( x, y, z, color, intensity ) {
 
-scene.add(dirLight);
-scene.add(hemiLight);
+    const directionalLight = new THREE.DirectionalLight( color, intensity );
+    directionalLight.position.set( x, y, z );
+    scene.add( directionalLight );
 
-const mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry( 100, 100 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: false } ) );
+    directionalLight.castShadow = true;
+
+    const d = 2;
+    directionalLight.shadow.camera.left = - d;
+    directionalLight.shadow.camera.right = d;
+    directionalLight.shadow.camera.top = d;
+    directionalLight.shadow.camera.bottom = - d;
+
+    directionalLight.shadow.camera.near = 0.1;
+    directionalLight.shadow.camera.far = 40;
+
+    directionalLight.shadow.mapSize.width = 1024;
+    directionalLight.shadow.mapSize.height = 1024;
+
+    directionalLight.shadow.bias = - 0.001;
+
+}
+
+const mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry( 100, 100 ), new THREE.MeshPhongMaterial( { color: 0x999999, specular: 0x101010 } ));
+mesh.position.set(0,-0.02,0);
 mesh.rotation.x = - Math.PI / 2;
 mesh.receiveShadow = true;
-//scene.add( mesh );
+scene.add( mesh );
 
-const pmremGenerator = new THREE.PMREMGenerator( renderer );
-pmremGenerator.compileEquirectangularShader();
-
-const model_click = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/1376484/stacy_lightweight.glb';
-
-new THREE.RGBELoader()
-    .setDataType( THREE.UnsignedByteType )
-    .setPath( 'assets/objs/testing/fondo/' )
-    .load( '360-Hotel-World-Trade-Center-Barcelona-01.hdr', function ( texture ) {
-
-        const envMap = pmremGenerator.fromEquirectangular( texture ).texture;
-
-        scene.background = envMap;
-        scene.environment = envMap;
-
-        texture.dispose();
-        pmremGenerator.dispose();
-
-        animate();
-
-        // model
-
-        
 const loader = new THREE.GLTFLoader();
 loader.setPath('assets/objs/testing/');
 loader.load('sekeleton.1.glb', (object) => {
@@ -124,27 +132,10 @@ loader.load('sekeleton.1.glb', (object) => {
     esqueletoModel.position.set(0,0,0);
     createPanel();
 
-    mixer = new THREE.AnimationMixer(esqueletoModel);
-
-    const animations = object.animations;
-    console.log(animations);
-    idle = mixer.clipAction(animations[0]);
-    idle.play();
-    /* idle = mixer.clipAction(animations[2]);
-    walk = mixer.clipAction(animations[1]);
-    run = mixer.clipAction(animations[3]);
-    perriar = mixer.clipAction(animations[0]);
-    tpose = mixer.clipAction(animations[4]);
-
-    actions = [idle,walk,run,perriar,tpose]; 
-
-    activateAllActions(); */
 
 });
 
-/////////////////////////////////////////////////////////////////////////////////////
-
-loader.load('organosConTexturas.glb', (object) => {
+loader.load('organos con animaciones.glb', (object) => {
 
     organosModel = object.scene;
     organosModel.scale.setScalar(0.025)
@@ -158,35 +149,22 @@ loader.load('organosConTexturas.glb', (object) => {
         }
     });
 
-    //posicion:
-    organosModel.position.set(0,0,0);
-
-});
-
-/*
- loader.load('Character.glb', (object) => {
-
-    pielModel = object.scene;
-    pielModel.scale.setScalar(0.025)
-    scene.add(pielModel);
     
+    mixer = new THREE.AnimationMixer(organosModel);
 
-    pielModel.traverse(function (child) {
-        if (child.isMesh) {
-            child.castShadow = true;
-            //child.receiveShadow = true;
-        }
-    });
+    const animations = object.animations;
+    mixer.timeScale = 4.0;
+    console.log(animations);
+    pulmonDer = mixer.clipAction(animations[1]);
+    pulmonIzq = mixer.clipAction(animations[2]);
+    corazon = mixer.clipAction(animations[0]);
 
-    //posicion:
-    pielModel.position.set(0,0,0);
+    corazon.play();
+    pulmonIzq.play();
+    pulmonDer.play(); 
 
-}); */
-
-//////////////////////////////////////////////////////////////////////////////////////
-
-
-    } );
+    organosModel.position.set(0,0,0);
+});
 
 raycaster = new THREE.Raycaster();
 
@@ -221,19 +199,32 @@ function createPanel(){
         'Mostrar organos': true,
         'Mostrar piel': true,
         'Pausar/Continuar': pauseContinue,
-        'De caminar a parado':function(){
-            prepareCrossFade(walk, idle, 1.0);
+        'Corazón':function(){
+            flagCorazon = !flagCorazon;
+            //prepareCrossFade(walk, idle, 1.0);
+            if(flagCorazon){
+                corazon.paused = false;
+                corazonSound.play();
+            }
+            else{
+                corazon.paused = true;
+                corazonSound.stop();
+            }
         },
-        'De parado a caminar':function(){
-            prepareCrossFade(idle, walk, 0.5);
+        'Pulmones':function(){
+            flagPulmon = !flagPulmon;
+
+            if(flagPulmon){
+                pulmonDer.paused = false;
+                pulmonIzq.paused = false;
+                respiracionSound.play();
+            }else{
+                pulmonDer.paused = true;
+                pulmonIzq.paused = true;
+                respiracionSound.stop();
+            }
         },
-        'De caminar a correr': function(){
-            prepareCrossFade(walk, run, 5.0);
-        },
-        'De correr a caminar': function(){
-            prepareCrossFade(run, walk, 5.0);
-        },
-        'Modificar velocidad de animacion': 1.0
+        'Modificar velocidad de animacion': 4.0
     }
 
     folder1.add(settings, 'Mostrar esqueleto').onChange((visibility) => {
@@ -258,11 +249,10 @@ function createPanel(){
         pielModel.visible = visibility;
     });
 
-    crossFadeControls.push(folder2.add(settings, 'De caminar a parado'));
-    crossFadeControls.push(folder2.add(settings, 'De parado a caminar'));
-    crossFadeControls.push(folder2.add(settings, 'De caminar a correr'));
-    crossFadeControls.push(folder2.add(settings, 'De correr a caminar'));
-    folder3.add( settings, 'Modificar velocidad de animacion', 0.0, 1.5, 0.01 ).onChange( modifyTimeScale );
+    crossFadeControls.push(folder2.add(settings, 'Corazón'));
+    crossFadeControls.push(folder2.add(settings, 'Pulmones'));
+
+    folder3.add( settings, 'Modificar velocidad de animacion', 0.0, 5.0, 0.01 ).onChange( modifyTimeScale );
 
     folder1.open();
     folder2.open();
@@ -451,6 +441,7 @@ async function escribir(titulo,info,num1,num2){
     document.getElementById('info').innerHTML = "";
     document.getElementById('info').appendChild(h1);
     document.getElementById('info').appendChild(h2);
+    
     for(i = 0; i < num1; i++) {
         h1.innerHTML += titulo.charAt(i);
          await sleep(wait*2);
@@ -468,7 +459,10 @@ async function escribir(titulo,info,num1,num2){
 }
 
 function imagen(src){
-    document.getElementById('info-img').src = src;
+    let img = document.createElement('img');
+    img.src = src;
+    img.className = "info-img";
+    document.body.appendChild(img);
 }
 
 function sleep(ms) {
