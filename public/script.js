@@ -241,13 +241,13 @@ function createPanel(){
             organosModel.position.set(0,0,0);
         organosModel.visible = visibility;
     });
-    folder1.add(settings, 'Mostrar piel').onChange((visibility) => {
+    /* folder1.add(settings, 'Mostrar piel').onChange((visibility) => {
         if(!visibility)
             pielModel.position.set(-0.25,0,100);
         else
             pielModel.position.set(0,0,0);
         pielModel.visible = visibility;
-    });
+    }); */
 
     crossFadeControls.push(folder2.add(settings, 'Corazón'));
     crossFadeControls.push(folder2.add(settings, 'Pulmones'));
