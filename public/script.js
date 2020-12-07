@@ -159,6 +159,9 @@ loader.load('organos con animaciones.glb', (object) => {
     pulmonIzq = mixer.clipAction(animations[2]);
     corazon = mixer.clipAction(animations[0]);
 
+    pulmonDer.timeScale = 0.5;
+    pulmonIzq.timeScale = 0.5;
+
     corazon.play();
     pulmonIzq.play();
     pulmonDer.play(); 
@@ -193,6 +196,7 @@ function createPanel(){
     const folder1 = panel.addFolder("Visión");
     const folder2 = panel.addFolder("Animaciones");
     const folder3 = panel.addFolder("Velocidad");
+    const folder4 = panel.addFolder("Reparar");
     
     settings = {
         'Mostrar esqueleto': true,
@@ -224,7 +228,10 @@ function createPanel(){
                 respiracionSound.stop();
             }
         },
-        'Modificar velocidad de animacion': 4.0
+        'Modificar velocidad de animacion': 4.0,
+        'Arreglar': function(){
+            flag = false;
+        }
     }
 
     folder1.add(settings, 'Mostrar esqueleto').onChange((visibility) => {
@@ -253,10 +260,12 @@ function createPanel(){
     crossFadeControls.push(folder2.add(settings, 'Pulmones'));
 
     folder3.add( settings, 'Modificar velocidad de animacion', 0.0, 5.0, 0.01 ).onChange( modifyTimeScale );
+    folder4.add( settings, 'Arreglar');
 
     folder1.open();
     folder2.open();
     folder3.open();
+    folder4.open();
 }
 
 function modifyTimeScale(speed){
