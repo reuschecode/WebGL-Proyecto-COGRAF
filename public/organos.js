@@ -7,6 +7,12 @@ const organos = {
             "Img": "https://i.pinimg.com/474x/45/89/a2/4589a20b0f6d1a6c7e4e5bffa52073c1.jpg"
           },
           {
+          "Id": "2traquea",
+            "Nombre": "Traquea",
+            "Info": "Vía respiratoria que va de la laringe hasta los bronquios (vías respiratorias grandes que llegan hasta los pulmones). También se llama caña del pulmón. Anatomía del sistema respiratorio.",
+            "Img": "https://i.pinimg.com/474x/45/89/a2/4589a20b0f6d1a6c7e4e5bffa52073c1.jpg"
+          },
+          {
             "Id": "2bronquio_1001",
             "Nombre": "Bronquio",
             "Info": "Conducto en que se bifurca la tráquea y que se va subdividiendo a su vez en ramificaciones cada vez más finas en los pulmones.",
@@ -115,6 +121,18 @@ const organos = {
           "Img": "https://www.stanfordchildrens.org/content-public/topic/images/04/322504.jpeg"
         },
         {
+          "Id": "2higado_1",
+          "Nombre": "Higado",
+          "Info": "El hígado regula la mayor parte de los niveles químicos de la sangre y excreta un producto llamado bilis, que ayuda a descomponer las grasas y las prepara para su posterior digestión y absorción. Toda la sangre que sale del estómago y de los intestinos atraviesa el hígado.",
+          "Img": "https://www.stanfordchildrens.org/content-public/topic/images/04/322504.jpeg"
+        },
+        {
+          "Id": "2higado_2",
+          "Nombre": "Higado",
+          "Info": "El hígado regula la mayor parte de los niveles químicos de la sangre y excreta un producto llamado bilis, que ayuda a descomponer las grasas y las prepara para su posterior digestión y absorción. Toda la sangre que sale del estómago y de los intestinos atraviesa el hígado.",
+          "Img": "https://www.stanfordchildrens.org/content-public/topic/images/04/322504.jpeg"
+        },
+        {
             "Id": "2higado001",
             "Nombre": "Higado",
             "Info": "El hígado regula la mayor parte de los niveles químicos de la sangre y excreta un producto llamado bilis, que ayuda a descomponer las grasas y las prepara para su posterior digestión y absorción. Toda la sangre que sale del estómago y de los intestinos atraviesa el hígado.",
@@ -164,6 +182,18 @@ const organos = {
         },
         {
           "Id": "2pulmon_i001",
+          "Nombre": "Pulmón izquierdo",
+          "Info": "Los pulmones son estructuras anatómicas pertenecientes al sistema respiratorio, se ubican en la caja torácica, a ambos lados del mediastino. Debido al espacio ocupado por el corazón, el pulmón derecho es más grande que su homólogo izquierdo.",
+          "Img": "https://www.cdc.gov/spanish/cancer/lung/images/lungdiagram.jpg"
+        },
+        {
+          "Id": "2pulmon_d",
+          "Nombre": "Pulmón derecho",
+          "Info": "Los pulmones son estructuras anatómicas pertenecientes al sistema respiratorio, se ubican en la caja torácica, a ambos lados del mediastino. Debido al espacio ocupado por el corazón, el pulmón derecho es más grande que su homólogo izquierdo.",
+          "Img": "https://www.cdc.gov/spanish/cancer/lung/images/lungdiagram.jpg"
+        },
+        {
+          "Id": "2pulmon_i",
           "Nombre": "Pulmón izquierdo",
           "Info": "Los pulmones son estructuras anatómicas pertenecientes al sistema respiratorio, se ubican en la caja torácica, a ambos lados del mediastino. Debido al espacio ocupado por el corazón, el pulmón derecho es más grande que su homólogo izquierdo.",
           "Img": "https://www.cdc.gov/spanish/cancer/lung/images/lungdiagram.jpg"

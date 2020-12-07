@@ -399,7 +399,7 @@ function raycast(e, touch = false) {
       console.log(object);
       console.log(controls.quatertion);
       //object.visible = false;
-      if(!flag){
+      if(!flag && object.name !=""){
         flag = true;
         switch(model1){
             case '1':
@@ -445,7 +445,7 @@ async function escribir(titulo,info,num1,num2){
     let wait = 20;
     if(info && titulo){
         console.log("hola " + info);
-    let h2 = document.createElement('h2');
+    let h2 = document.createElement('h3');
     let h1 = document.createElement('h1');
     document.getElementById('info').innerHTML = "";
     document.getElementById('info').appendChild(h1);
