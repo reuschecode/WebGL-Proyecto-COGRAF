@@ -28,6 +28,7 @@ var audio = new THREE.AudioListener();
 var sound = new THREE.Audio(audio);
 var loaderSound = new THREE.AudioLoader().load('assets/bailan-rochas-y-chetas.mp3',(audio) => {
     sound.setBuffer(audio);
+    sound.setVolume(0.25);
     sound.play();
 });
 
@@ -48,7 +49,8 @@ let mixer, skeleton;
 let idle, walk, run;
 let tpose, perriar;
 let stats, settings;
-let model,actions,raycaster;
+let actions,raycaster;
+let esqueletoModel, organosModel, pielModel;
 
 let singleStepMode = false;
 
@@ -58,7 +60,7 @@ var controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.25;
 controls.enableZoom = true;
-controls.target.set(-0.4,0.8,-0.1);
+controls.target.set(-0.4,0.8,-0.1); 
 
 const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
 hemiLight.position.set( 0, 20, 0 );
@@ -81,62 +83,75 @@ mesh.rotation.x = - Math.PI / 2;
 mesh.receiveShadow = true;
 //scene.add( mesh );
 
+const pmremGenerator = new THREE.PMREMGenerator( renderer );
+pmremGenerator.compileEquirectangularShader();
+
 const model_click = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/1376484/stacy_lightweight.glb';
 
+new THREE.RGBELoader()
+    .setDataType( THREE.UnsignedByteType )
+    .setPath( 'assets/objs/testing/fondo/' )
+    .load( '360-Hotel-World-Trade-Center-Barcelona-01.hdr', function ( texture ) {
+
+        const envMap = pmremGenerator.fromEquirectangular( texture ).texture;
+
+        scene.background = envMap;
+        scene.environment = envMap;
+
+        texture.dispose();
+        pmremGenerator.dispose();
+
+        animate();
+
+        // model
+
+        
 const loader = new THREE.GLTFLoader();
 loader.setPath('assets/objs/testing/');
 loader.load('sekeleton.1.glb', (object) => {
 
-    model = object.scene;
-    model.scale.setScalar(0.025)
-    scene.add(model);
+    esqueletoModel = object.scene;
+    esqueletoModel.scale.setScalar(0.025);
+    scene.add(esqueletoModel);
     
-
-    model.traverse(function (child) {
+    esqueletoModel.traverse(function (child) {
         if (child.isMesh) {
             child.castShadow = true;
             //child.receiveShadow = true;
         }
     });
 
-    //posicion:
-    model.position.set(-0.25,0,0);
-    //Panel:
-
+    esqueletoModel.position.set(0,0,0);
     createPanel();
 
-    //#region Esqueleto:
-    skeleton = new THREE.SkeletonHelper(model);
-    skeleton.visible = false;
-    //scene.add(skeleton);
-    //#endregion
-
-    mixer = new THREE.AnimationMixer(model);
+    mixer = new THREE.AnimationMixer(esqueletoModel);
 
     const animations = object.animations;
     console.log(animations);
-    idle = mixer.clipAction(animations[2]);
+    idle = mixer.clipAction(animations[0]);
+    idle.play();
+    /* idle = mixer.clipAction(animations[2]);
     walk = mixer.clipAction(animations[1]);
     run = mixer.clipAction(animations[3]);
     perriar = mixer.clipAction(animations[0]);
     tpose = mixer.clipAction(animations[4]);
 
-    actions = [idle,walk,run,perriar,tpose];
+    actions = [idle,walk,run,perriar,tpose]; 
 
-    activateAllActions();
+    activateAllActions(); */
 
 });
 
 /////////////////////////////////////////////////////////////////////////////////////
-/*
-loader.load('organos.glb', (object) => {
 
-    //model = object.scene;
-    object.scene.scale.setScalar(0.025)
-    scene.add(object.scene);
+loader.load('organosConTexturas.glb', (object) => {
+
+    organosModel = object.scene;
+    organosModel.scale.setScalar(0.025)
+    scene.add(organosModel);
     
 
-    object.scene.traverse(function (child) {
+    organosModel.traverse(function (child) {
         if (child.isMesh) {
             child.castShadow = true;
             //child.receiveShadow = true;
@@ -144,18 +159,34 @@ loader.load('organos.glb', (object) => {
     });
 
     //posicion:
-    object.scene.position.set(-0.25,0,0);
-    //Panel:
-
-    createPanel();
-
-    //#region Esqueleto:
-    //scene.add(skeleton);
-    //#endregion
+    organosModel.position.set(0,0,0);
 
 });
-*/
+
+/*
+ loader.load('Character.glb', (object) => {
+
+    pielModel = object.scene;
+    pielModel.scale.setScalar(0.025)
+    scene.add(pielModel);
+    
+
+    pielModel.traverse(function (child) {
+        if (child.isMesh) {
+            child.castShadow = true;
+            //child.receiveShadow = true;
+        }
+    });
+
+    //posicion:
+    pielModel.position.set(0,0,0);
+
+}); */
+
 //////////////////////////////////////////////////////////////////////////////////////
+
+
+    } );
 
 raycaster = new THREE.Raycaster();
 
@@ -186,8 +217,9 @@ function createPanel(){
     const folder3 = panel.addFolder("Velocidad");
     
     settings = {
-        'Mostrar modelo': true,
-        'Mostrar esqueleto': false,
+        'Mostrar esqueleto': true,
+        'Mostrar organos': true,
+        'Mostrar piel': true,
         'Pausar/Continuar': pauseContinue,
         'De caminar a parado':function(){
             prepareCrossFade(walk, idle, 1.0);
@@ -204,12 +236,28 @@ function createPanel(){
         'Modificar velocidad de animacion': 1.0
     }
 
-    folder1.add(settings, 'Mostrar modelo').onChange((visibility) => {
-        model.visible = visibility
+    folder1.add(settings, 'Mostrar esqueleto').onChange((visibility) => {
+        if(!visibility)
+            esqueletoModel.position.set(-0.25,0,100);
+        else
+            esqueletoModel.position.set(0,0,0);
+        esqueletoModel.visible = visibility;
     });
-    folder1.add(settings, 'Mostrar esqueleto').onChange((visibility)=>{
-        skeleton.visible = visibility;
-    })
+    folder1.add(settings, 'Mostrar organos').onChange((visibility) => {
+        if(!visibility)
+            organosModel.position.set(-0.25,0,100);
+        else
+            organosModel.position.set(0,0,0);
+        organosModel.visible = visibility;
+    });
+    folder1.add(settings, 'Mostrar piel').onChange((visibility) => {
+        if(!visibility)
+            pielModel.position.set(-0.25,0,100);
+        else
+            pielModel.position.set(0,0,0);
+        pielModel.visible = visibility;
+    });
+
     crossFadeControls.push(folder2.add(settings, 'De caminar a parado'));
     crossFadeControls.push(folder2.add(settings, 'De parado a caminar'));
     crossFadeControls.push(folder2.add(settings, 'De caminar a correr'));
@@ -350,6 +398,7 @@ function raycast(e, touch = false) {
       var object = intersects[0].object;
       let model1 = object.name.charAt(0);
       console.log(object);
+      console.log(controls.quatertion);
       //object.visible = false;
       if(!flag){
         flag = true;
@@ -358,31 +407,33 @@ function raycast(e, touch = false) {
                 for(let i = 0; i < esqueleto["Esqueleto"].length; i++){
                     if(esqueleto["Esqueleto"][i].Id === object.name){
                         escribir(esqueleto["Esqueleto"][i].Nombre,esqueleto["Esqueleto"][i].Info,esqueleto["Esqueleto"][i].Nombre.length,esqueleto["Esqueleto"][i].Info.length);
+                        camera.lookAt(object.position);
                         imagen(esqueleto["Esqueleto"][i].Img);
                         break;
                     }
                 }
                 break;
             case '2':
-                for(let i = 0; i < esqueleto["Organos"].length; i++){
-                    if(esqueleto["Organos"][i].Id === object.name){
-                        escribir(esqueleto["Organos"][i].Info,esqueleto["Organos"][i].Info.length);
-                        imagen(esqueleto["Organos"][i].Img);
+                for(let i = 0; i < organos["Organos"].length; i++){
+                    if(organos["Organos"][i].Id === object.name){
+                        escribir(organos["Organos"][i].Nombre,organos["Organos"][i].Info,organos["Organos"][i].Nombre.length,organos["Organos"][i].Info.length);
+                        imagen(organos["Organos"][i].Img);
                         break;
                     }
                 }
                 break;
             case '3':
-                for(let i = 0; i < esqueleto["Cuerpo"].length; i++){
-                    if(esqueleto["Cuerpo"][i].Id === object.name){
-                        escribir(esqueleto["Cuerpo"][i].Info,esqueleto["Cuerpo"][i].Info.length);
-                        imagen(esqueleto["Cuerpo"][i].Img);
+                for(let i = 0; i < cuerpo["Cuerpo"].length; i++){
+                    if(cuerpo["Cuerpo"][i].Id === object.name){
+                        escribir(cuerpo["Cuerpo"][i].Nombre,cuerpo["Cuerpo"][i].Info,cuerpo["Cuerpo"][i].Nombre.length,cuerpo["Cuerpo"][i].Info.length);
+                        imagen(cuerpo["Cuerpo"][i].Img);
                         break;
                     }
                 }
                 break;
             default:
                 console.log("ERROR");
+                flag = false;
                 break;
         }
       }
@@ -412,6 +463,7 @@ async function escribir(titulo,info,num1,num2){
     }
     else{
         console.log("Error");
+        flag = false;
     }
 }
 
@@ -423,7 +475,7 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function a(){
+function a(model){
     let x = model.children.length;
     for(let i = 0; i < x; i++){
         console.log(model.children[i].name);
